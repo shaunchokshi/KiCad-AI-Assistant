@@ -1,0 +1,26 @@
+name: Sync fork with upstream
+
+# Fork-maintenance workflow (not part of upstream paul356/KiCad-AI-Assistant):
+# merges upstream main into this fork's main daily via GitHub's merge-upstream
+# API. A 409 (merge conflict with fork-local commits) fails the run — that is
+# the signal that a manual merge is needed.
+
+on:
+  schedule:
+    - cron: "23 5 * * *" # daily 05:23 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge upstream main into fork main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api -X POST "repos/${{ github.repository }}/merge-upstream" \
+            -f branch=main \
+            --jq '"\(.merge_type // "none"): \(.message)"'
